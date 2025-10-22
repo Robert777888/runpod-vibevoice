@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  comfyui-vibevoice:
+    build: .
+    container_name: vibevoice-comfyui
+    ports:
+      - "8188:8188"
+      - "7860:7860"
+    volumes:
+      - ./models:/workspace/ComfyUI/models
+      - ./input:/workspace/ComfyUI/input
+      - ./output:/workspace/ComfyUI/output
+      - ./custom_nodes:/workspace/ComfyUI/custom_nodes
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped

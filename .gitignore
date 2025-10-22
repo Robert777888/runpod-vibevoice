@@ -1,0 +1,45 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+
+# Models (nagy fájlok)
+models/
+*.safetensors
+*.bin
+*.ckpt
+*.pth
+*.pt
+
+# Outputs
+output/
+outputs/
+temp/
+tmp/
+
+# Input audio files
+input/audio/*.wav
+input/audio/*.mp3
+!input/audio/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
