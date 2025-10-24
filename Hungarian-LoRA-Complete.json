@@ -1,0 +1,156 @@
+{
+  "id": "magyar-lora-workflow",
+  "revision": 1,
+  "last_node_id": 46,
+  "last_link_id": 65,
+  "nodes": [
+    {
+      "id": 15,
+      "type": "LoadAudio",
+      "pos": [15, 126],
+      "size": [270, 136],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {"name": "audio", "type": "COMBO", "link": null},
+        {"name": "audioUI", "type": "AUDIO_UI", "link": null},
+        {"name": "upload", "type": "AUDIOUPLOAD", "link": null}
+      ],
+      "outputs": [
+        {"name": "AUDIO", "type": "AUDIO", "links": [60]}
+      ],
+      "properties": {"Node name for S&R": "LoadAudio"},
+      "widgets_values": ["youtube_video_speaker.wav", null, null],
+      "color": "#2a363b",
+      "bgcolor": "#3f5159"
+    },
+    {
+      "id": 45,
+      "type": "VibeVoiceLoRANode",
+      "pos": [15, 290],
+      "size": [270, 178],
+      "flags": {},
+      "order": 6,
+      "mode": 0,
+      "inputs": [
+        {"name": "lora_name", "type": "COMBO", "link": null},
+        {"name": "llm_strength", "type": "FLOAT", "link": null},
+        {"name": "use_llm", "type": "BOOLEAN", "link": null},
+        {"name": "use_diffusion_head", "type": "BOOLEAN", "link": null},
+        {"name": "use_acoustic_connector", "type": "BOOLEAN", "link": null},
+        {"name": "use_semantic_connector", "type": "BOOLEAN", "link": null}
+      ],
+      "outputs": [
+        {"name": "lora", "type": "LORA_CONFIG", "links": [65]}
+      ],
+      "properties": {"Node name for S&R": "VibeVoiceLoRANode"},
+      "widgets_values": ["HUN-1200", 2.0, true, true, true, true],
+      "color": "#432",
+      "bgcolor": "#653"
+    },
+    {
+      "id": 44,
+      "type": "VibeVoiceSingleSpeakerNode",
+      "pos": [320, 126],
+      "size": [400, 420],
+      "flags": {},
+      "order": 7,
+      "mode": 0,
+      "inputs": [
+        {"name": "voice_to_clone", "type": "AUDIO", "link": 60},
+        {"name": "lora", "type": "LORA_CONFIG", "link": 65},
+        {"name": "text", "type": "STRING", "link": null},
+        {"name": "model", "type": "COMBO", "link": null},
+        {"name": "attention_type", "type": "COMBO", "link": null},
+        {"name": "quantize_llm", "type": "COMBO", "link": null},
+        {"name": "free_memory_after_generate", "type": "BOOLEAN", "link": null},
+        {"name": "diffusion_steps", "type": "INT", "link": null},
+        {"name": "seed", "type": "INT", "link": null},
+        {"name": "cfg_scale", "type": "FLOAT", "link": null},
+        {"name": "use_sampling", "type": "BOOLEAN", "link": null},
+        {"name": "temperature", "type": "FLOAT", "link": null},
+        {"name": "top_p", "type": "FLOAT", "link": null},
+        {"name": "max_words_per_chunk", "type": "INT", "link": null},
+        {"name": "voice_speed_factor", "type": "FLOAT", "link": null}
+      ],
+      "outputs": [
+        {"name": "audio", "type": "AUDIO", "links": [61]}
+      ],
+      "properties": {"Node name for S&R": "VibeVoiceSingleSpeakerNode"},
+      "widgets_values": [
+        "Sziasztok! Ez egy teszt a magyar nyelv szintetizálásához. A VibeVoice modell magyar LoRA-val képes tiszta és természetes magyar beszédet generálni.",
+        "VibeVoice-Large-Q8",
+        "auto",
+        "8bit",
+        true,
+        25,
+        42,
+        "fixed",
+        1.5,
+        false,
+        0.95,
+        0.95,
+        250,
+        0.95
+      ],
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 16,
+      "type": "PreviewAudio",
+      "pos": [750, 126],
+      "size": [270, 88],
+      "flags": {},
+      "order": 8,
+      "mode": 0,
+      "inputs": [
+        {"name": "audio", "type": "AUDIO", "link": 61},
+        {"name": "audioUI", "type": "AUDIO_UI", "link": null}
+      ],
+      "outputs": [],
+      "properties": {"Node name for S&R": "PreviewAudio"},
+      "widgets_values": [],
+      "color": "#323",
+      "bgcolor": "#535"
+    },
+    {
+      "id": 46,
+      "type": "Note",
+      "pos": [15, 500],
+      "size": [700, 140],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "title": "🇭🇺 MAGYAR LoRA BEÁLLÍTÁSOK",
+      "properties": {},
+      "widgets_values": [
+        "✅ LoRA: HUN-1200 (Magyar diffusion head)\n✅ LLM Strength: 2.0 (erős magyar kiejtés)\n✅ Model: VibeVoice-Large-Q8 (8bit)\n✅ Quantize: 8bit (gyorsabb, kisebb VRAM)\n\n⚙️ FINOMHANGOLÁS:\n- LLM strength 1.5-2.5: Magyar kiejtés erőssége\n- Diffusion steps 20-30: Minőség vs sebesség\n- CFG scale 1.3-1.7: Kreativitás vs pontosság"
+      ],
+      "color": "#2a4",
+      "bgcolor": "#3a5"
+    }
+  ],
+  "links": [
+    [60, 15, 0, 44, 0, "AUDIO"],
+    [61, 44, 0, 16, 0, "AUDIO"],
+    [65, 45, 0, 44, 1, "LORA_CONFIG"]
+  ],
+  "groups": [
+    {
+      "title": "🇭🇺 Magyar TTS Workflow - LoRA-val",
+      "bounding": [0, 50, 1040, 600],
+      "color": "#3f789e",
+      "font_size": 24
+    }
+  ],
+  "config": {},
+  "extra": {
+    "ds": {
+      "scale": 1.0,
+      "offset": [0, 0]
+    }
+  },
+  "version": 0.4
+}

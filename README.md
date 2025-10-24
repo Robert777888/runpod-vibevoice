@@ -1,87 +1,223 @@
-# 🎙️ VibeVoice ComfyUI - RunPod Template
+# 🎙️ VibeVoice ComfyUI - RunPod Docker Image
 
-**Magyar hangklónozás ComfyUI-ban, RunPod-on futtatva. Teljes automatizált setup!**
+Magyar TTS (Text-to-Speech) rendszer ComfyUI-ban, VibeVoice 7B modellel és magyar LoRA-val.
 
-[![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![RunPod](https://img.shields.io/badge/RunPod-6E3FF3?style=for-the-badge)](https://runpod.io/)
-[![ComfyUI](https://img.shields.io/badge/ComfyUI-FF6B6B?style=for-the-badge)](https://github.com/comfyanonymous/ComfyUI)
+## 🚀 Gyors Indítás
 
-## ⚡ Gyors Start (3 lépésben)
-
-### 1️⃣ Fork vagy Clone
+### 1️⃣ Docker Image Build
 
 ```bash
-git clone https://github.com/YOURNAME/runpod-vibevoice.git
-cd runpod-vibevoice
+# Mac-en (local build):
+cd /Users/robertkispal/PycharmProjects/text_to_speech/runpod-vibevoice
+
+docker build --platform linux/amd64 -t robert777888/vibevoice-comfyui:latest .
+docker push robert777888/vibevoice-comfyui:latest
 ```
 
-### 2️⃣ Build & Push
+### 2️⃣ RunPod Deployment
 
-```bash
-chmod +x build_and_push.sh
-./build_and_push.sh your_dockerhub_username
-```
+1. **Template létrehozása:**
+   - Container Image: `robert777888/vibevoice-comfyui:latest`
+   - Container Disk: 40 GB
+   - Expose HTTP Ports: `8188` (ComfyUI)
+   - GPU: RTX 4090 vagy A100 (24GB+ VRAM)
 
-### 3️⃣ RunPod Deploy
+2. **Pod indítása:**
+   - Template kiválasztása
+   - GPU típus: RTX 4090 (24GB VRAM)
+   - Start Pod
 
-1. Menj: https://www.runpod.io/console/pods
-2. **New Template**
-3. **Container Image**: `your_dockerhub_username/vibevoice-comfyui:latest`
-4. **Container Disk**: `50GB`
-5. **Expose Ports**: `8188`
-6. **Deploy Pod**
-
-**Kész! 🎉 Nyisd meg a Port 8188 linket és használd a ComfyUI-t!**
+3. **Hozzáférés:**
+   - ComfyUI: `https://[pod-id]-8188.proxy.runpod.net`
 
 ---
 
-## 📋 Mi van benne?
+## 📦 Tartalma
 
-- ✅ **ComfyUI** - Vizuális workflow editor
-- ✅ **VibeVoice 7B** - Alap TTS modell
-- ✅ **Magyar LoRA** - Hungarian CV17 Diffusion Head
-- ✅ **Automatikus setup** - Minden előre konfigurálva
-- ✅ **Ready-to-use workflow** - Importálható JSON
-- ✅ **Docker + Docker Compose** - Lokális teszteléshez
+### Modellek (Előre Letöltve):
+
+| Model | Méret | Hely | Leírás |
+|-------|-------|------|--------|
+| **VibeVoice-Large-Q8** | 11.6GB | `/workspace/ComfyUI/models/vibevoice/VibeVoice-Large-Q8/` | 8-bit kvantált modell |
+| **Qwen Tokenizer** | 11MB | `/workspace/ComfyUI/models/vibevoice/tokenizer/` | KÖTELEZŐ tokenizer |
+| **Magyar LoRA (HUN-1200)** | 2.8GB | `/workspace/ComfyUI/models/vibevoice/loras/HUN-1200/` | Magyar diffusion head |
+
+**Teljes méret:** ~15 GB (modellek + dependencies)
 
 ---
 
-## 🚀 GYORS START (Helyi Teszt)
+## 🎯 Workflow Setup
 
-```bash
-# 1. Lépj be a mappába
-cd runpod-vibevoice
+### Alapértelmezett Workflow (Magyar LoRA-val):
 
-# 2. Adj futtatási jogot a scriptnek
-chmod +x quick_setup.sh
+```
+1. LoadAudio
+   └─ Tölts fel magyar hangmintát (10-30 sec)
 
-# 3. Futtasd
-./quick_setup.sh
+2. VibeVoice LoRA
+   ├─ lora_name: HUN-1200
+   ├─ llm_strength: 2.0
+   └─ Kapcsold a VibeVoice Single Speaker node-hoz
 
-# 4. Nyisd meg böngészőben
-# http://localhost:8188
+3. VibeVoice Single Speaker
+   ├─ voice_to_clone: LoadAudio output
+   ├─ lora: VibeVoice LoRA output
+   ├─ text: "Magyar szöveg..."
+   ├─ model: VibeVoice-Large-Q8
+   ├─ quantize_llm: 8bit
+   ├─ diffusion_steps: 25
+   └─ cfg_scale: 1.5
+
+4. PreviewAudio
+   └─ Hallgasd meg az eredményt!
+```
+
+### Workflow JSON-ök:
+
+- `Hungarian-LoRA-FIXED.json` - Magyar LoRA-val
+- `Single-Speaker-Working-NO-LoRA.json` - LoRA nélkül
+
+---
+
+## 🔧 Beállítások Finomhangolása
+
+### Magyar Kiejtés Erőssége:
+
+```
+llm_strength: 1.0-1.5  → Gyenge magyar akcentus
+llm_strength: 1.5-2.0  → Közepes (AJÁNLOTT)
+llm_strength: 2.0-2.5  → Erős magyar kiejtés
+```
+
+### Minőség vs Sebesség:
+
+```
+diffusion_steps: 20    → Gyorsabb (~15 sec)
+diffusion_steps: 25    → Kiegyensúlyozott (AJÁNLOTT)
+diffusion_steps: 30    → Jobb minőség (~25 sec)
+```
+
+### CFG Scale (Kreativitás):
+
+```
+cfg_scale: 1.3-1.5     → Konzervatív, pontosabb
+cfg_scale: 1.5-1.7     → Kiegyensúlyozott (AJÁNLOTT)
+cfg_scale: 1.7-2.0     → Kreatívabb, változatosabb
 ```
 
 ---
 
-## 💰 Költségbecslés (RunPod)
+## 📂 Mappa Struktúra
 
-| GPU | $/óra | 10s generálás |
-|-----|-------|--------------|
-| RTX 3090 | $0.50 | ~25s |
-| RTX 4090 | $0.75 | ~20s |
+```
+/workspace/ComfyUI/
+├── models/
+│   └── vibevoice/
+│       ├── VibeVoice-Large-Q8/      # Q8 model
+│       ├── tokenizer/                # Tokenizer (KÖTELEZŐ!)
+│       └── loras/                    # LoRA-k (nem "lora"!)
+│           └── HUN-1200/             # Magyar LoRA
+│               ├── adapter_config.json
+│               ├── adapter_model.safetensors
+│               ├── config.json
+│               ├── model.safetensors
+│               └── diffusion_head/
+├── input/
+│   └── audio/                        # Hangminták ide
+├── output/
+│   └── audio/                        # Generált audió
+└── custom_nodes/
+    └── VibeVoice-ComfyUI/           # VibeVoice node
+```
 
-**100 klip = ~$0.40**
+---
+
+## 🐛 Hibaelhárítás
+
+### 1. "No models found"
+```bash
+# Ellenőrizd a modelleket:
+ls -la /workspace/ComfyUI/models/vibevoice/VibeVoice-Large-Q8/
+
+# Ha üres, építsd újra a Docker image-t
+```
+
+### 2. "LoRA not found" vagy csak 'None' látszik
+```bash
+# Ellenőrizd a LoRA helyet:
+ls -la /workspace/ComfyUI/models/vibevoice/loras/HUN-1200/
+
+# FONTOS: "loras" nem "lora"!
+# Kell látni: adapter_config.json, adapter_model.safetensors
+```
+
+### 3. "Invalid UUID" hiba workflow betöltésnél
+```
+Használd a javított JSON fájlokat:
+- Hungarian-LoRA-FIXED.json
+- Single-Speaker-Working-NO-LoRA.json
+```
+
+### 4. Akcentusos magyar hang (gyenge LoRA)
+```
+Növeld az llm_strength értékét:
+1.5 → 2.0 → 2.5
+```
+
+---
+
+## 💾 VRAM Igények
+
+| GPU | VRAM | Model | Quantization | Működik? |
+|-----|------|-------|--------------|----------|
+| RTX 3090 | 24GB | Q8 | 8bit | ✅ Igen |
+| RTX 4090 | 24GB | Q8 | 8bit | ✅ Igen (AJÁNLOTT) |
+| A100 | 40GB | Q8 | 8bit | ✅ Igen |
+| RTX 3080 | 10GB | Q8 | 8bit | ❌ Nem elég |
+
+---
+
+## 📝 Változások (Latest)
+
+### v1.1 (2025-10-22)
+- ✅ LoRA mappa javítva: `loras/` helyett `lora/`
+- ✅ LoRA struktúra javítva: `diffusion_head1200` tartalom közvetlenül `HUN-1200/` alatt
+- ✅ Tokenizer letöltés hozzáadva (KÖTELEZŐ!)
+- ✅ Dockerfile optimalizálva
+- ✅ Magyar LoRA (HUN-1200) előre telepítve
+
+### v1.0 (2025-10-21)
+- 🎉 Első verzió
+- VibeVoice-Large-Q8 modell
+- ComfyUI alaprendszer
 
 ---
 
 ## 🔗 Hasznos Linkek
 
-- **ComfyUI**: https://github.com/comfyanonymous/ComfyUI
-- **VibeVoice**: https://github.com/Enemyx-net/VibeVoice-ComfyUI
-- **Magyar Model**: https://huggingface.co/Cseti/VibeVoice_7B_Diffusion-head-LoRA_Hungarian-CV17
-- **RunPod**: https://www.runpod.io/
+- [VibeVoice GitHub](https://github.com/microsoft/VibeVoice)
+- [VibeVoice-ComfyUI Node](https://github.com/Enemyx-net/VibeVoice-ComfyUI)
+- [VibeVoice Q8 Model](https://huggingface.co/FabioSarracino/VibeVoice-Large-Q8)
+- [Magyar LoRA](https://huggingface.co/Cseti/VibeVoice_7B_Diffusion-head-LoRA_Hungarian-CV17)
+- [Qwen Tokenizer](https://huggingface.co/Qwen/Qwen2.5-1.5B)
 
 ---
 
-**Made with ❤️ | v1.0.0**
+## 📄 Licenc
+
+MIT License
+
+---
+
+## 👤 Szerző
+
+Robert Kispal (@robert777888)
+
+---
+
+## 🙏 Köszönet
+
+- Microsoft VibeVoice csapat
+- Enemyx-net (VibeVoice-ComfyUI)
+- Cseti (Magyar LoRA)
+- RunPod közösség

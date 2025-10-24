@@ -53,24 +53,25 @@ RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.
 # HELYES MAPPASTRUKTÚRA LÉTREHOZÁSA
 # ===================================
 WORKDIR /workspace/ComfyUI
-RUN mkdir -p models/vibevoice/VibeVoice-Large-Q8 \
+RUN mkdir -p models/vibevoice/VibeVoice_7B_hun_v2 \
     && mkdir -p models/vibevoice/tokenizer \
     && mkdir -p models/vibevoice/loras \
     && mkdir -p input/audio \
     && mkdir -p output/audio
 
 # ===================================
-# MODELLEK LETÖLTÉSE - HELYES HELYEKRE
+# CSETI MAGYAR MODELLEK LETÖLTÉSE
 # ===================================
 
-# 1. BASE MODEL (Q8 - 11.6GB)
-RUN echo "📥 Q8 Model letöltése..." && \
-    cd /workspace/ComfyUI/models/vibevoice/VibeVoice-Large-Q8 && \
-    huggingface-cli download FabioSarracino/VibeVoice-Large-Q8 \
-    --local-dir . \
-    --local-dir-use-symlinks False
+# 🇭🇺 1. CSETI FŐ MAGYAR MODELL (Full Finetune, ~14GB)
+RUN echo "🇭🇺 📥 Cseti Magyar Modell letöltése (VibeVoice_7B_hun_v2)..." && \
+    cd /workspace/ComfyUI/models/vibevoice && \
+    huggingface-cli download Cseti/VibeVoice_7B_hun_v2 \
+    --local-dir VibeVoice_7B_hun_v2 \
+    --local-dir-use-symlinks False && \
+    echo "✅ Cseti Magyar Modell kész!"
 
-# 2. TOKENIZER (11MB) - KÖTELEZŐ!
+# 🇭🇺 2. TOKENIZER (Qwen 2.5, ~11MB)
 RUN echo "📥 Tokenizer letöltése..." && \
     cd /workspace/ComfyUI/models/vibevoice/tokenizer && \
     huggingface-cli download Qwen/Qwen2.5-1.5B \
@@ -79,36 +80,62 @@ RUN echo "📥 Tokenizer letöltése..." && \
     merges.txt \
     tokenizer.json \
     --local-dir . \
-    --local-dir-use-symlinks False
-
-# 3. MAGYAR LoRA (2.8GB) - HELYES HELYRE ÉS STRUKTÚRÁBAN!
-RUN echo "📥 Magyar LoRA letöltése HELYES helyre..." && \
-    cd /workspace/ComfyUI/models/vibevoice/loras && \
-    huggingface-cli download Cseti/VibeVoice_7B_Diffusion-head-LoRA_Hungarian-CV17 \
-    --include "diffusion_head1200/*" \
-    --local-dir HUN-1200-temp \
     --local-dir-use-symlinks False && \
-    mv HUN-1200-temp/diffusion_head1200 HUN-1200 && \
-    rm -rf HUN-1200-temp && \
-    echo "✅ Magyar LoRA kész!"
+    echo "✅ Tokenizer kész!"
+
+# 🇭🇺 3. MAGYAR LoRA - MIND A 3 VERZIÓ (600, 900, 1200)
+# Letöltjük az egész repot egyszer, majd átstrukturáljuk
+RUN echo "🇭🇺 📥 Magyar LoRA-k letöltése (MIND A 3)..." && \
+    cd /workspace/ComfyUI/models/vibevoice/loras && \
+    \
+    echo "📥 Teljes LoRA repo letöltése..." && \
+    huggingface-cli download Cseti/VibeVoice_7B_Diffusion-head-LoRA_Hungarian-CV17 \
+    --local-dir lora-temp \
+    --local-dir-use-symlinks False && \
+    \
+    echo "  → LoRA 600 struktúra..." && \
+    mkdir -p HUN-600/diffusion_head && \
+    cp lora-temp/diffusion_head600/adapter_config.json HUN-600/ && \
+    cp lora-temp/diffusion_head600/model.safetensors HUN-600/diffusion_head/adapter_model.safetensors && \
+    \
+    echo "  → LoRA 900 struktúra..." && \
+    mkdir -p HUN-900/diffusion_head && \
+    cp lora-temp/diffusion_head900/adapter_config.json HUN-900/ && \
+    cp lora-temp/diffusion_head900/model.safetensors HUN-900/diffusion_head/adapter_model.safetensors && \
+    \
+    echo "  → LoRA 1200 struktúra..." && \
+    mkdir -p HUN-1200/diffusion_head && \
+    cp lora-temp/diffusion_head1200/adapter_config.json HUN-1200/ && \
+    cp lora-temp/diffusion_head1200/model.safetensors HUN-1200/diffusion_head/adapter_model.safetensors && \
+    \
+    rm -rf lora-temp && \
+    echo "✅ Mind a 3 LoRA kész!"
 
 # ===================================
 # ELLENŐRZÉS ÉS LOGOLÁS
 # ===================================
-RUN echo "==================================" && \
-    echo "📊 TELEPÍTETT MODELLEK:" && \
-    echo "==================================" && \
-    echo "📁 VibeVoice-Large-Q8:" && \
-    ls -lh /workspace/ComfyUI/models/vibevoice/VibeVoice-Large-Q8/ | head -5 && \
+RUN echo "==========================================" && \
+    echo "🇭🇺 CSETI MAGYAR TTS - TELEPÍTETT MODELLEK" && \
+    echo "==========================================" && \
+    echo "" && \
+    echo "📁 Cseti Magyar Modell (VibeVoice_7B_hun_v2):" && \
+    ls -lh /workspace/ComfyUI/models/vibevoice/VibeVoice_7B_hun_v2/ | head -8 && \
     echo "" && \
     echo "📁 Tokenizer:" && \
     ls -lh /workspace/ComfyUI/models/vibevoice/tokenizer/ && \
     echo "" && \
-    echo "📁 Magyar LoRA (HUN-1200):" && \
-    ls -lh /workspace/ComfyUI/models/vibevoice/loras/HUN-1200/ && \
+    echo "📁 Magyar LoRA-k:" && \
+    echo "  → HUN-600:" && \
+    ls -lhR /workspace/ComfyUI/models/vibevoice/loras/HUN-600/ && \
+    echo "  → HUN-900:" && \
+    ls -lhR /workspace/ComfyUI/models/vibevoice/loras/HUN-900/ && \
+    echo "  → HUN-1200:" && \
+    ls -lhR /workspace/ComfyUI/models/vibevoice/loras/HUN-1200/ && \
     echo "" && \
-    echo "✅ Minden modell telepítve!" && \
-    echo "=================================="
+    echo "✅ Minden Cseti modell telepítve!" && \
+    echo "==========================================" && \
+    echo "🎉 MAGYAR TTS PRODUCTION READY!" && \
+    echo "=========================================="
 
 # Start script másolása
 COPY start.sh /workspace/start.sh

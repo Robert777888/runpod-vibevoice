@@ -50,65 +50,30 @@ WORKDIR /workspace/ComfyUI/custom_nodes/VibeVoice-ComfyUI
 RUN if [ -f requirements.txt ]; then pip install --no-cache-dir -r requirements.txt; fi
 
 # ===================================
-# HELYES MAPPASTRUKTÚRA LÉTREHOZÁSA
+# MAPPASTRUKTÚRA LÉTREHOZÁSA
 # ===================================
 WORKDIR /workspace/ComfyUI
-RUN mkdir -p models/vibevoice/VibeVoice-Large-Q8 \
-    && mkdir -p models/vibevoice/tokenizer \
-    && mkdir -p models/vibevoice/loras \
+RUN mkdir -p models/vibevoice \
     && mkdir -p input/audio \
     && mkdir -p output/audio
 
 # ===================================
-# MODELLEK LETÖLTÉSE - HELYES HELYEKRE
+# INFO ÜZENET
 # ===================================
-
-# 1. BASE MODEL (Q8 - 11.6GB)
-RUN echo "📥 Q8 Model letöltése..." && \
-    cd /workspace/ComfyUI/models/vibevoice/VibeVoice-Large-Q8 && \
-    huggingface-cli download FabioSarracino/VibeVoice-Large-Q8 \
-    --local-dir . \
-    --local-dir-use-symlinks False
-
-# 2. TOKENIZER (11MB) - KÖTELEZŐ!
-RUN echo "📥 Tokenizer letöltése..." && \
-    cd /workspace/ComfyUI/models/vibevoice/tokenizer && \
-    huggingface-cli download Qwen/Qwen2.5-1.5B \
-    tokenizer_config.json \
-    vocab.json \
-    merges.txt \
-    tokenizer.json \
-    --local-dir . \
-    --local-dir-use-symlinks False
-
-# 3. MAGYAR LoRA (2.8GB) - HELYES HELYRE ÉS STRUKTÚRÁBAN!
-RUN echo "📥 Magyar LoRA letöltése HELYES helyre..." && \
-    cd /workspace/ComfyUI/models/vibevoice/loras && \
-    huggingface-cli download Cseti/VibeVoice_7B_Diffusion-head-LoRA_Hungarian-CV17 \
-    --include "diffusion_head1200/*" \
-    --local-dir HUN-1200-temp \
-    --local-dir-use-symlinks False && \
-    mv HUN-1200-temp/diffusion_head1200 HUN-1200 && \
-    rm -rf HUN-1200-temp && \
-    echo "✅ Magyar LoRA kész!"
-
-# ===================================
-# ELLENŐRZÉS ÉS LOGOLÁS
-# ===================================
-RUN echo "==================================" && \
-    echo "📊 TELEPÍTETT MODELLEK:" && \
-    echo "==================================" && \
-    echo "📁 VibeVoice-Large-Q8:" && \
-    ls -lh /workspace/ComfyUI/models/vibevoice/VibeVoice-Large-Q8/ | head -5 && \
+RUN echo "==========================================" && \
+    echo "🇭🇺 CSETI MAGYAR TTS - LITE VERSION" && \
+    echo "==========================================" && \
     echo "" && \
-    echo "📁 Tokenizer:" && \
-    ls -lh /workspace/ComfyUI/models/vibevoice/tokenizer/ && \
+    echo "✅ ComfyUI telepítve" && \
+    echo "✅ VibeVoice node telepítve" && \
+    echo "✅ Python dependencies telepítve" && \
     echo "" && \
-    echo "📁 Magyar LoRA (HUN-1200):" && \
-    ls -lh /workspace/ComfyUI/models/vibevoice/loras/HUN-1200/ && \
+    echo "📥 MODELLEK POD INDULÁSKOR LETÖLTŐDNEK!" && \
+    echo "   (~17GB - első indulás 10-15 perc)" && \
     echo "" && \
-    echo "✅ Minden modell telepítve!" && \
-    echo "=================================="
+    echo "==========================================" && \
+    echo "Docker image méret: ~8 GB (models nélkül)" && \
+    echo "=========================================="
 
 # Start script másolása
 COPY start.sh /workspace/start.sh
